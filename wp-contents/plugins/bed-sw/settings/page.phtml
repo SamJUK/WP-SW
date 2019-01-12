@@ -1,0 +1,128 @@
+<div class="wrap">
+    <h1>BED Service Worker</h1>
+    <form method="post" action="options.php">
+        <?php settings_fields( 'bed-sw-settings-group' ); ?>
+        <?php do_settings_sections( 'bed-sw-settings-group' ); ?>
+        <table class="form-table">
+            <tr valign="top">
+                <td style="vertical-align: top;width:50%;">
+                    <table class="form-table">
+                        <tr valign="top">
+                            <td colspan="2">
+                                <h2>Overview</h2>
+                                <hr/>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Version</th>
+                            <td>
+                                <p><?php echo get_option('bed-sw-swVersion') ?></p>
+                                <input style="display:none;" name="bed-sw-swVersion" type="text" value="<?php echo get_option('bed-sw-swVersion') ?>" disabled title="SWVersion"/>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">Cache Name</th>
+                            <td><?php echo $buildHelper->getCacheName() ?></td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">FILES TO CACHE</th>
+                            <td>
+                                <a id="view-files-btn" class="button button-primary thickbox" href="#TB_inline?width=600&height=550&inlineId=modal-window-view-files">View Files</a>
+                                <!-- MODAL -->
+                                <?php add_thickbox(); ?>
+                                <div id="modal-window-view-files" style="display:none;">
+                                    <?php
+                                    // @TODO: Maybe show a diff between the current service worker & if a new one was compiled
+                                    // @TODO: This stuff should come from the current generated service worker rather than if a new on was generated
+                                    $files = $buildHelper->getFilesToCache();
+                                    $baseUrl = get_home_url();
+                                    ?>
+                                    <p>
+                                    <?php foreach ($files as $file): ?>
+                                        <a href="<?php echo $baseUrl.$file?>" target="_BLANK"><?php echo $file ?></a><br>
+                                    <?php endforeach; ?>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr valign="top">
+                            <th scope="row">LAST BUILD</th>
+                            <?php //TODO: DRY UP FILE PATH, USED IN MULTIPLE PLACES ?>
+                            <td><?php echo date('d-m-Y H:i:s', filemtime(plugin_dir_path(__DIR__) . 'service-worker.js')) ?></td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="vertical-align: top;width:50%;">
+                    <table class="form-table">
+                        <tr valign="top">
+                            <td colspan="2">
+                                <h2>Configuration</h2>
+                                <hr/>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <th scope="row">Is Enabled</th>
+                            <td>
+                                <?php select_boolean('bed-sw-isEnabled', esc_attr( get_option('bed-sw-isEnabled') )) ?>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <th scope="row">Cache Pages</th>
+                            <td>
+                                <?php select_boolean('bed-sw-cachePages', esc_attr( get_option('bed-sw-cachePages') )) ?>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <th scope="row">Cache Posts</th>
+                            <td>
+                                <?php select_boolean('bed-sw-cachePosts', esc_attr( get_option('bed-sw-cachePosts') )) ?>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <th scope="row">Cache JS Files</th>
+                            <td>
+                                <?php select_boolean('bed-sw-cacheJS', esc_attr( get_option('bed-sw-cacheJS') )) ?>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <th scope="row">Cache CSS Files</th>
+                            <td>
+                                <?php select_boolean('bed-sw-cacheCSS', esc_attr( get_option('bed-sw-cacheCSS') )) ?>
+                            </td>
+                        </tr>
+
+                        <tr valign="top">
+                            <td style="width:100%;text-align:right" colspan="2">
+                                <div style="white-space: nowrap;">
+                                    <input type="submit" name="submit" id="submit" class="button button-primary" value="Save Changes">
+                                    <button type="button" onclick="rebuilt_sw()" id="rebuild-sw-btn" class="button button-primary" value="Rebuild Service Worker">Rebuild Service Worker</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <script>
+            function rebuilt_sw()
+            {
+                jQuery.post(
+                    '<?php echo admin_url( 'admin-ajax.php' ) ?>',
+                    { 'action': 'bed_build_sw' },
+                    function(response) {
+                        var time = (new Date()).getTime() + 300;
+                        document.cookie = `sw_build_notice=${response};${time};path=<?php echo COOKIEPATH ?>`;
+                        window.location.reload();
+                    }
+
+                );
+                return false;
+            }
+        </script>
+    </form>
+</div>
