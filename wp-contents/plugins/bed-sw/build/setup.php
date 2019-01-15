@@ -4,7 +4,6 @@
  * /wp-admin/admin-ajax.php?action=bed_build_sw
  */
 add_action( 'wp_ajax_bed_build_sw', 'build_service_worker' );
-
 function build_service_worker() {
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);

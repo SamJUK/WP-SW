@@ -1,16 +1,36 @@
-// Service Worker Logic
-(function(){
+/**
+ * Based from the reacticon service worker
+ *
+ * @date 15/01/2019
+ * @see http://reacticon.org/serviceworker.js
+ */
+const CACHE_NAME = "my-site-v1";
+const OFFLINE_FILES_URL = '/wp-json/bed-sw/offlinefiles';
+
+importScripts('serviceworker-cache-polyfill.js');
+
+self.addEventListener('install', event => {
+    event.waitUntil (
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                fetch(OFFLINE_FILES_URL)
+                    .then(response => response.json())
+                    .then(cachableFiles => cache.addAll(cachableFiles))
+                    .catch(error => console.log(error))
+            })
+            .then(() => self.skipWaiting())
+    )
+});
+
+self.addEventListener('activate', event => {
+    event.waitUntil(self.clients.claim());
+});
+
+self.addEventListener('fetch', event => {
     
-    // IF THE SERVICE WORKER IS DISABLED RETURN EARLY
-    // WE CANT JUST REMOVE THE CALL FROM THE HTML SINCE
-    // THE SERVICE WORKER HAS THE ABILITY TO CACHE THE HTML
-    // FOR OFFLINE USAGE / BANDWIDTH SAVING REASONS
-    return false;
-    
-
-
-    var FILESTOCACHE = ["\/a-homepage-section\/","\/about\/","\/asd\/","\/blog\/","\/contact\/","\/","\/sample-page\/","\/?post_type=post&p=1"];
-
-    var dataCacheName = "my-site-v3";
-    var cacheName = dataCacheName;
-})();
+    event.respondWith(
+        caches.match(event.request, {ignoreSearch: true})
+            .then(response => fetch(event.request).catch(error => response))
+            .catch(error => caches.match('/'))
+    );
+});

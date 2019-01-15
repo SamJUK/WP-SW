@@ -1,0 +1,13 @@
+<script>
+    (function() {
+        if (('serviceWorker' in navigator) === false) {
+            return;
+        }
+
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('<?php echo $serviceWorkerUrl ?>')
+                .then(registration => console.log('ServiceWorker registration successful with scope: ', registration.scope))
+                .catch(err => console.log('ServiceWorker registration failed: ', err));
+        });
+    })();
+</script>
